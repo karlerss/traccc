@@ -147,12 +147,8 @@ class Track extends CLI
                 echo "Received commit!   \n";
                 $this->stop(trim($message));
                 sleep(1);
-                for ($i = 5; $i >= 0; $i--) {
-                    echo "Stop? ($i) [s] \r";
-                    $line = fgets(STDIN);
-                    if (trim($line) === 's') {
-                        exit(0);
-                    }
+                for ($i = 10; $i >= 0; $i--) {
+                    echo "Press Ctrl+C to finish ($i) \r";
                 }
                 $this->start();
             }
