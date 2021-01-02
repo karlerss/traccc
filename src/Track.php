@@ -140,8 +140,8 @@ class Track extends CLI
             $started = Carbon::parse($openEntry->start_at);
             if ($last->isAfter($started)) {
                 echo "Received commit!   \n";
-
                 $this->stop(trim($message));
+                sleep(1);
                 $this->start();
             }
         }
