@@ -5,10 +5,9 @@ namespace karlerss\Traccc;
 use Carbon\Carbon;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Schema\Blueprint;
-use PDO;
 use splitbrain\phpcli\CLI;
-use splitbrain\phpcli\Exception;
 use splitbrain\phpcli\Options;
+use splitbrain\phpcli\TableFormatter;
 
 class Track extends CLI
 {
@@ -50,7 +49,7 @@ class Track extends CLI
         $options->registerCommand('report', "Show entries");
         $options->registerCommand('up', "Create db tables");
 
-        $options->registerArgument("message", false, 'stop');
+        $options->registerArgument("message", 'Message', false, 'stop');
         $options->registerOption("interactive", 'Show status after start', 'i', false, 'start');
     }
 
@@ -84,7 +83,7 @@ class Track extends CLI
             while (true) {
                 $diff = Carbon::now()->diff($start);
                 $fmtd = $diff->format('%H:%I:%S');
-                echo "Tracking: $fmtd\r";
+                echo "\033[32mTracking: $fmtd\r";
                 sleep(1);
                 $this->checkCommit();
             }
@@ -157,6 +156,28 @@ class Track extends CLI
 
     protected function report()
     {
-        var_dump(DB::table('entries')->get());
+        $entries = DB::table('entries')->get();
+        $tf = new TableFormatter($this->colors);
+        $tf->setBorder(' | '); // nice border between colmns
+
+        // show a header
+
+        $widths = ['5%', '*', '10%', '20%', '20%'];
+        echo $tf->format(
+            $widths,
+            ['ID', 'message', 'duration (h)', 'start', 'stop']
+        );
+        foreach ($entries as $entry) {
+            $start = Carbon::parse($entry->start_at);
+            $end = Carbon::parse($entry->end_at);
+            $duration = $start->diffInSeconds($end, true);
+            echo $tf->format($widths, [
+                $entry->id,
+                $entry->message,
+                round($duration / 60 / 60, 5),
+                $start->setTimezone('Europe/Tallinn'),
+                $end,
+            ]);
+        }
     }
 }
