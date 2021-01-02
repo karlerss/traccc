@@ -47,6 +47,7 @@ class Track extends CLI
         $options->registerCommand('pause', "Pause tracking");
         $options->registerCommand('stop', "Finish tracking");
         $options->registerCommand('status', "Show status");
+        $options->registerCommand('report', "Show entries");
         $options->registerCommand('up', "Create db tables");
 
         $options->registerOption("message", 'Set entry message', 'm');
@@ -111,7 +112,7 @@ class Track extends CLI
 
     protected function stop(?string $message = null)
     {
-
+        echo "Stopping: $message \n";
         $openEntry = $this->getOpenEntry();
         if (!$openEntry) {
             echo "Nothing to finish!\n";
@@ -137,12 +138,17 @@ class Track extends CLI
         $openEntry = $this->getOpenEntry();
         if ($openEntry) {
             $started = Carbon::parse($openEntry->start_at);
-
             if ($last->isAfter($started)) {
-                echo "Received commit!\n";
+                echo "Received commit!   \n";
+
                 $this->stop(trim($message));
                 $this->start();
             }
         }
+    }
+
+    protected function report()
+    {
+        var_dump(DB::table('entries')->get());
     }
 }
