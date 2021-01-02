@@ -113,7 +113,6 @@ class Track extends CLI
     protected function stop(?string $message = null)
     {
         $msg = $message ?? $this->options->getArgs()[0] ?? null;
-        var_dump($msg, $message, $this->options->getOpt('message'));
 
         echo "Stopping: $msg \n";
 
@@ -148,6 +147,13 @@ class Track extends CLI
                 echo "Received commit!   \n";
                 $this->stop(trim($message));
                 sleep(1);
+                for ($i = 5; $i >= 0; $i--) {
+                    echo "Stop? ($i) [s] \r";
+                    $line = fgets(STDIN);
+                    if (trim($line) === 's') {
+                        exit(0);
+                    }
+                }
                 $this->start();
             }
         }
