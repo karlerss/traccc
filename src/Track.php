@@ -163,7 +163,7 @@ class Track extends CLI
         $widths = ['5%', '*', '10%', '20%', '20%'];
         echo $tf->format(
             $widths,
-            ['ID', 'message', 'duration (h)', 'start', 'stop']
+            ['ID', 'message', 'duration (h)', 'start', 'end']
         );
         foreach ($entries as $entry) {
             $start = Carbon::parse($entry->start_at);
@@ -174,7 +174,7 @@ class Track extends CLI
                 $entry->message,
                 round($duration / 60 / 60, 5),
                 $start->setTimezone('Europe/Tallinn'),
-                $end,
+                $end->setTimezone('Europe/Tallinn'),
             ]);
         }
     }
