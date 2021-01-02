@@ -32,25 +32,23 @@ class Track extends CLI
             'prefix' => '',
         ]);
 
-        // Make this Capsule instance available globally via static methods... (optional)
         $capsule->setAsGlobal();
     }
 
 
     protected function setup(Options $options)
     {
-        $options->setHelp('PHP time tracker');
+        $options->setHelp('A CLI time tracker with git commit watcher');
         $options->registerOption('version', 'print version', 'v');
 
         $options->registerCommand('start', "Start tracking");
-        $options->registerCommand('pause', "Pause tracking");
         $options->registerCommand('stop', "Finish tracking");
         $options->registerCommand('status', "Show status");
         $options->registerCommand('report', "Show entries");
         $options->registerCommand('up', "Create db tables");
 
         $options->registerArgument("message", 'Message', false, 'stop');
-        $options->registerOption("interactive", 'Show status after start', 'i', false, 'start');
+        $options->registerOption("watch", 'Watch for git commits in working directory', 'w', false, 'start');
     }
 
     protected function main(Options $options)
@@ -103,7 +101,7 @@ class Track extends CLI
             'message' => $this->options->getOpt('m'),
         ]);
 
-        if ($this->options->getOpt('interactive')) {
+        if ($this->options->getOpt('watch')) {
             $this->status();
         }
     }
