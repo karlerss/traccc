@@ -43,21 +43,21 @@ class Track extends CLI
         $options->setHelp('PHP time tracker');
         $options->registerOption('version', 'print version', 'v');
 
-        $options->registerOption("message", 'Set entry message', 'm');
-        $options->registerOption("interactive", 'Show status after start', 'i');
-
         $options->registerCommand('start', "Start tracking");
         $options->registerCommand('pause', "Pause tracking");
-        $options->registerCommand('finish', "Finish tracking");
+        $options->registerCommand('stop', "Finish tracking");
         $options->registerCommand('status', "Show status");
         $options->registerCommand('up', "Create db tables");
+
+        $options->registerOption("message", 'Set entry message', 'm');
+        $options->registerOption("interactive", 'Show status after start', 'i', false, 'start');
     }
 
     protected function main(Options $options)
     {
         $cmd = $options->getCmd();
         if (method_exists($this, $cmd)) {
-            $this->$cmd($options);
+            $this->$cmd();
         } else {
             echo $options->help();
         }
@@ -65,18 +65,19 @@ class Track extends CLI
 
     protected function up()
     {
+//        DB::schema()->dropAllTables();
+
         DB::schema()->create('entries', function (Blueprint $table) {
             $table->id();
             $table->timestamp('start_at');
-            $table->timestamp('finish_at')->nullable();
+            $table->timestamp('end_at')->nullable();
             $table->string('message')->nullable();
         });
     }
 
-    protected function status(Options $options)
+    protected function status()
     {
         echo getcwd() . "\n";
-        $this->checkCommit();
         $openEntry = $this->getOpenEntry();
         if ($openEntry) {
             $start = Carbon::parse($openEntry->start_at);
@@ -85,13 +86,14 @@ class Track extends CLI
                 $fmtd = $diff->format('%H:%I:%S');
                 echo "Tracking: $fmtd\r";
                 sleep(1);
+                $this->checkCommit();
             }
         } else {
             echo "Not tracking\n";
         }
     }
 
-    protected function start(Options $options)
+    protected function start()
     {
         if ($this->getOpenEntry()) {
             echo "Already tracking!\n";
@@ -99,34 +101,48 @@ class Track extends CLI
         }
         $res = DB::table('entries')->insert([
             'start_at' => Carbon::now(),
-            'message' => $options->getOpt('m'),
+            'message' => $this->options->getOpt('m'),
         ]);
 
-        $this->status($options);
+        if ($this->options->getOpt('interactive')) {
+            $this->status();
+        }
     }
 
-    protected function finish()
+    protected function stop(?string $message = null)
     {
+
         $openEntry = $this->getOpenEntry();
         if (!$openEntry) {
             echo "Nothing to finish!\n";
             exit(1);
         }
         DB::table('entries')->where('id', $openEntry->id)->update([
-            'finish_at' => Carbon::now(),
+            'end_at' => Carbon::now(),
+            'message' => $message || $this->options->getOpt('message'),
         ]);
     }
 
     protected function getOpenEntry()
     {
-        return DB::table('entries')->whereNull('finish_at')->first();
+        return DB::table('entries')->whereNull('end_at')->first();
     }
 
-    protected function checkCommit()
+    private function checkCommit()
     {
         $dir = getcwd();
         $lastCommit = shell_exec("git log -1 --format=\"%ai;%B\"");
         list($timestamp, $message) = explode(';', $lastCommit);
         $last = Carbon::parse($timestamp);
+        $openEntry = $this->getOpenEntry();
+        if ($openEntry) {
+            $started = Carbon::parse($openEntry->start_at);
+
+            if ($last->isAfter($started)) {
+                echo "Received commit!\n";
+                $this->stop(trim($message));
+                $this->start();
+            }
+        }
     }
 }
