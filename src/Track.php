@@ -50,7 +50,7 @@ class Track extends CLI
         $options->registerCommand('report', "Show entries");
         $options->registerCommand('up', "Create db tables");
 
-        $options->registerOption("message", 'Set entry message', 'm');
+        $options->registerArgument("message", false, 'stop');
         $options->registerOption("interactive", 'Show status after start', 'i', false, 'start');
     }
 
@@ -112,15 +112,21 @@ class Track extends CLI
 
     protected function stop(?string $message = null)
     {
-        echo "Stopping: $message \n";
+        $msg = $message ?? $this->options->getArgs()[0] ?? null;
+        var_dump($msg, $message, $this->options->getOpt('message'));
+
+        echo "Stopping: $msg \n";
+
         $openEntry = $this->getOpenEntry();
+
         if (!$openEntry) {
             echo "Nothing to finish!\n";
             exit(1);
         }
+
         DB::table('entries')->where('id', $openEntry->id)->update([
             'end_at' => Carbon::now(),
-            'message' => $message || $this->options->getOpt('message'),
+            'message' => $msg,
         ]);
     }
 
