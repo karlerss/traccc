@@ -78,7 +78,6 @@ class Track extends CLI
 
     protected function status()
     {
-        echo getcwd() . "\n";
         $openEntry = $this->getOpenEntry();
         if ($openEntry) {
             $start = Carbon::parse($openEntry->start_at);
@@ -144,11 +143,12 @@ class Track extends CLI
         if ($openEntry) {
             $started = Carbon::parse($openEntry->start_at);
             if ($last->isAfter($started)) {
-                echo "Received commit!   \n";
+                echo "Received commit!   \n\n";
                 $this->stop(trim($message));
                 sleep(1);
                 for ($i = 10; $i >= 0; $i--) {
                     echo "Press Ctrl+C to finish ($i) \r";
+                    sleep(1);
                 }
                 $this->start();
             }
