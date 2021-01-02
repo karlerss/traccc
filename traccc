@@ -1,0 +1,23 @@
+#!/usr/bin/env php
+<?php
+declare(ticks=1);
+
+use karlerss\Traccc\Track;
+
+require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/src/Track.php';
+
+sapi_windows_set_ctrl_handler(function (int $event) {
+    switch ($event) {
+        case PHP_WINDOWS_EVENT_CTRL_C:
+            echo "You have pressed CTRL+C\n";
+            break;
+        case PHP_WINDOWS_EVENT_CTRL_BREAK:
+            echo "You have pressed CTRL+BREAK\n";
+            break;
+    }
+    exit;
+});
+
+$cli = new Track();
+$cli->run();

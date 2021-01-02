@@ -1,0 +1,12 @@
+{
+    "name": "karlerss/traccc",
+    "require": {
+        "splitbrain/php-cli": "^1.1",
+        "ext-pdo": "*",
+        "nesbot/carbon": "^2.43",
+        "illuminate/database": "^8.20"
+    },
+    "autoload": {
+        "psr-4": {"karlerss\\Traccc\\": "src/"}
+    }
+}
