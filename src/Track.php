@@ -46,7 +46,10 @@ class Track extends CLI
         $options->registerCommand('status', "Show status");
         $options->registerCommand('report', "Show entries");
         $options->registerCommand('up', "Create db tables");
+        $options->registerCommand('rm', "Remove an entry");
 
+
+        $options->registerArgument("id", 'Entry ID', true, 'rm');
         $options->registerArgument("message", 'Message', false, 'stop');
         $options->registerOption("watch", 'Watch for git commits in working directory', 'w', false, 'start');
     }
@@ -177,5 +180,12 @@ class Track extends CLI
                 $end->setTimezone('Europe/Tallinn'),
             ]);
         }
+    }
+
+    public function rm()
+    {
+        DB::table('entries')
+            ->where('id', $this->options->getArgs()[0])
+            ->delete();
     }
 }
