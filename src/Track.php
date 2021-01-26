@@ -47,8 +47,10 @@ class Track extends CLI
         $options->registerCommand('report', "Show entries");
         $options->registerCommand('up', "Create db tables");
         $options->registerCommand('rm', "Remove an entry");
+        $options->registerCommand('add', "Add an entry");
 
-
+        $options->registerArgument('interval', "Time interval to log", true, 'add');
+        $options->registerArgument("message", 'Message', true, 'add');
         $options->registerArgument("id", 'Entry ID', true, 'rm');
         $options->registerArgument("message", 'Message', false, 'stop');
         $options->registerOption("watch", 'Watch for git commits in working directory', 'w', false, 'start');
@@ -74,6 +76,16 @@ class Track extends CLI
             $table->timestamp('end_at')->nullable();
             $table->string('message')->nullable();
         });
+    }
+
+    protected function add()
+    {
+        $res = DB::table('entries')->insert([
+            'start_at' => Carbon::parse($this->options->getArgs()[0] . " ago"),
+            'end_at' => Carbon::now(),
+            'message' => $this->options->getArgs()[1],
+        ]);
+
     }
 
     protected function status()
@@ -157,7 +169,8 @@ class Track extends CLI
 
     protected function report()
     {
-        $entries = DB::table('entries')->get();
+        $query = DB::table('entries');
+        $entries = $query->get();
         $tf = new TableFormatter($this->colors);
         $tf->setBorder(' | '); // nice border between colmns
 
@@ -168,18 +181,25 @@ class Track extends CLI
             $widths,
             ['ID', 'message', 'duration (h)', 'start', 'end']
         );
+
+        $total = 0;
+
         foreach ($entries as $entry) {
             $start = Carbon::parse($entry->start_at);
             $end = Carbon::parse($entry->end_at);
             $duration = $start->diffInSeconds($end, true);
+            $hours = round($duration / 60 / 60, 5);
             echo $tf->format($widths, [
                 $entry->id,
                 $entry->message,
-                round($duration / 60 / 60, 5),
+                $hours,
                 $start->setTimezone('Europe/Tallinn'),
                 $end->setTimezone('Europe/Tallinn'),
             ]);
+            $total += $hours;
         }
+        echo $tf->getBorder();
+        echo $tf->format($widths, [null, null, $total, null, null]);
     }
 
     public function rm()
